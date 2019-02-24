@@ -3,7 +3,7 @@ defmodule TanksServerWeb.UserSocket do
 
   ## Channels
   # channel "room:*", TanksServerWeb.RoomChannel
-  channel "game:lobby", TanksServerWeb.GameChannel
+  channel "game:tanks:*", TanksServerWeb.GameChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
