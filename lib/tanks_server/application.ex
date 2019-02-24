@@ -11,9 +11,10 @@ defmodule TanksServer.Application do
       # Start the Ecto repository
       TanksServer.Repo,
       # Start the endpoint when the application starts
-      TanksServerWeb.Endpoint
+      TanksServerWeb.Endpoint,
       # Starts a worker by calling: TanksServer.Worker.start_link(arg)
       # {TanksServer.Worker, arg},
+      {TanksServer.PlayerTracker, [name: TanksServer.PlayerTracker, pubsub_server: TanksServer.PubSub]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
