@@ -16,6 +16,25 @@ defmodule TanksServer.PlayerTracker do
     Phoenix.Tracker.start_link(__MODULE__, opts, opts)
   end
 
+  def track(process_handle, topic, player_id, opts) do
+    Phoenix.Tracker.track(
+      __MODULE__,
+      process_handle,
+      topic,
+      player_id,
+      opts
+    )
+  end
+
+  def untrack(process_handle, topic, player_id) do
+    Phoenix.Tracker.untrack(__MODULE__, process_handle, topic, player_id)
+  end
+
+  def list(topic) do
+    Phoenix.Tracker.list(__MODULE__, topic)
+  end
+
+
   def init(opts) do
     server = Keyword.fetch!(opts, :pubsub_server)
     {:ok, %{pubsub_server: server, node_name: Phoenix.PubSub.node_name(server)}}
