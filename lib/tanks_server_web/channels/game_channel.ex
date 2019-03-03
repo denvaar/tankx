@@ -44,13 +44,26 @@ defmodule TanksServerWeb.GameChannel do
     broadcast_from!(socket, "player_left", %{"id" => socket.assigns.player_id})
   end
 
-  def handle_in("move", %{"x" => x, "y" => y}, socket) do
+  def handle_in("move", %{"x" => x, "y" => y, "velocity" => velocity, "barrel_rotation" => barrel_rotation}, socket) do
     player_id = socket.assigns.player_id
     game_id = socket.assigns.game_id
 
     ActivePlayer.update_position("#{game_id}__#{player_id}", x, y)
 
-    broadcast_from!(socket, "move", %{id: player_id, x: x, y: y})
+    broadcast_from!(socket, "move", %{id: player_id, x: x, y: y, velocity: velocity, barrel_rotation: barrel_rotation})
+    {:noreply, socket}
+  end
+
+  def handle_in("fire", %{"rotation" => rotation, "power" => power, "velocity" => velocity}, socket) do
+    player_id = socket.assigns.player_id
+    game_id = socket.assigns.game_id
+
+    broadcast_from!(socket, "fire", %{id: player_id, rotation: rotation, power: power, velocity: velocity})
+    {:noreply, socket}
+  end
+
+  def handle_in("explode", %{"player_id" => player_id}, socket) do
+    broadcast!(socket, "explode", %{id: player_id})
     {:noreply, socket}
   end
 end
