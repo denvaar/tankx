@@ -8,42 +8,6 @@ defmodule TanksServerWeb.GameChannel do
       |> assign(:game_id, game_id)}
   end
 
-  def join("game:tanks:play:" <> game_id, %{"player_id" => player_id} = _payload, socket) do
-    send(self(), {:add_player, game_id, player_id})
-
-    {:ok,
-      socket
-      |> assign(:player_id, player_id)
-      |> assign(:game_id, game_id)}
-  end
-
-  def handle_info({:add_player, game_id, player_id}, socket) do
-    # existing_players =
-    #   PlayerTracker.list("active_players:#{game_id}")
-
-    # game_ready = Enum.count(existing_players) >= 1
-
-    # # let the existing players know about the player who just joined
-    # broadcast!(socket, "player_joined", %{"player_info" => %{"id" => player_id, "x" => 150, "y" => 0}, "game_is_ready" => game_ready})
-
-    # # gather existing players and
-    # # push to the socket for each player info
-    # existing_players
-    # |> Enum.map(fn({id, _}) -> ActivePlayer.get_info("#{game_id}__#{id}") end)
-    # |> Enum.each(fn(existing_player) -> push(socket, "player_joined", %{"player_info" => existing_player, "game_is_ready" => game_ready}) end)
-
-    # # begin tracking the new player
-    # {:ok, active_player_pid} = activeplayer.start_link(game_id, player_id)
-    # playertracker.track(
-    #   active_player_pid,
-    #   "active_players:#{game_id}",
-    #   player_id,
-    #   %{}
-    # )
-
-    # {:noreply, assign(socket, :player_id, player_id)}
-  end
-
   def terminate(_reason, %Phoenix.Socket{assigns: %{game_id: game_id, player_id: player_id}} = socket) do
     name = String.to_atom("#{game_id}__#{player_id}")
     active_player_pid = Process.whereis(name)
@@ -80,8 +44,10 @@ defmodule TanksServerWeb.GameChannel do
       %{}
     )
 
+    player_info = ActivePlayer.get_info("#{game_id}__#{player_id}")
+
     # let the existing players know about the player who just joined
-    broadcast!(socket, "player_joined", %{"player_info" => %{"id" => player_id, "x" => 150, "y" => 300}})
+    broadcast!(socket, "player_joined", %{"player_info" => player_info})
 
     {:noreply, assign(socket, :player_id, player_id)}
   end
