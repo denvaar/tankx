@@ -5,10 +5,10 @@ defmodule TanksServer.ActivePlayer do
   # Client API
   # ----------
 
-  def start_link(game_id, player_id) do
+  def start_link(game_id, player_id, player_index) do
     GenServer.start_link(
       __MODULE__,
-      {:ok, game_id, player_id},
+      {:ok, game_id, player_id, player_index},
       [name: String.to_atom("#{game_id}__#{player_id}")]
     )
   end
@@ -30,8 +30,8 @@ defmodule TanksServer.ActivePlayer do
   # ----------
 
   @impl true
-  def init({:ok, game_id, player_id}) do
-    player_info = get_or_create_player(game_id, player_id)
+  def init({:ok, game_id, player_id, player_index}) do
+    player_info = Map.put(get_or_create_player(game_id, player_id), "player_index", player_index)
     {:ok, player_info}
   end
 

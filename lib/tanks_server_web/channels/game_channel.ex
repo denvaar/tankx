@@ -28,26 +28,34 @@ defmodule TanksServerWeb.GameChannel do
       PlayerTracker.list("active_players:#{game_id}")
       |> Enum.map(fn({id, _}) -> ActivePlayer.get_info("#{game_id}__#{id}") end)
 
-    push(socket, "list_players", %{"players" => existing_players})
+    broadcast!(socket, "list_players", %{"players" => existing_players})
     {:noreply, socket}
   end
 
   def handle_in("add_player", %{"player_id" => player_id}, socket) do
     game_id = socket.assigns.game_id
 
-    # begin tracking the new player
-    {:ok, active_player_pid} = ActivePlayer.start_link(game_id, player_id)
-    PlayerTracker.track(
-      active_player_pid,
-      "active_players:#{game_id}",
-      player_id,
-      %{}
-    )
+    # get list of players to determine player index
+    existing_players =
+      PlayerTracker.list("active_players:#{game_id}")
+    player_index = if Enum.count(existing_players) > 0, do: 2, else: 1
 
-    player_info = ActivePlayer.get_info("#{game_id}__#{player_id}")
+    # begin tracking the new player
+    with {:ok, active_player_pid} <- ActivePlayer.start_link(game_id, player_id, player_index) do
+      PlayerTracker.track(
+        active_player_pid,
+        "active_players:#{game_id}",
+        player_id,
+        %{}
+      )
+    end
+
+    players =
+      PlayerTracker.list("active_players:#{game_id}")
+      |> Enum.map(fn({id, _}) -> ActivePlayer.get_info("#{game_id}__#{id}") end)
 
     # let the existing players know about the player who just joined
-    broadcast!(socket, "player_joined", %{"player_info" => player_info})
+    broadcast!(socket, "player_joined", %{"players" => players})
 
     {:noreply, assign(socket, :player_id, player_id)}
   end
