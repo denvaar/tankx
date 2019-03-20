@@ -74,7 +74,7 @@ defmodule TanksServerWeb.GameChannel do
     player_id = socket.assigns.player_id
     game_id = socket.assigns.game_id
 
-    broadcast_from!(socket, "fire", %{id: player_id, rotation: rotation, power: power, velocity: velocity})
+    broadcast!(socket, "fire", %{id: player_id, rotation: rotation, power: power, velocity: velocity})
     {:noreply, socket}
   end
 
