@@ -70,11 +70,11 @@ defmodule TanksServerWeb.GameChannel do
     {:noreply, socket}
   end
 
-  def handle_in("fire", %{"rotation" => rotation, "power" => power, "velocity" => velocity}, socket) do
+  def handle_in("fire", %{"rotation" => rotation, "power" => power}, socket) do
     player_id = socket.assigns.player_id
     game_id = socket.assigns.game_id
 
-    broadcast!(socket, "fire", %{id: player_id, rotation: rotation, power: power, velocity: velocity})
+    broadcast!(socket, "fire", %{id: player_id, rotation: rotation, power: power})
     {:noreply, socket}
   end
 
