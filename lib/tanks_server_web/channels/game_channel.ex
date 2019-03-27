@@ -1,8 +1,9 @@
 defmodule TanksServerWeb.GameChannel do
   use TanksServerWeb, :channel
-  alias TanksServer.{ActivePlayer, PlayerTracker}
+  alias TanksServer.{ActivePlayer, PlayerTracker, TankGame}
 
   def join("game:tanks:play:" <> game_id, %{} = _payload, socket) do
+    TankGame.start_link(game_id)
     {:ok,
       socket
       |> assign(:game_id, game_id)}
@@ -19,7 +20,6 @@ defmodule TanksServerWeb.GameChannel do
 
   def terminate(_reason, _socket) do
   end
-
 
   def handle_in("list_players", _params, socket) do
     game_id = socket.assigns.game_id
@@ -48,6 +48,14 @@ defmodule TanksServerWeb.GameChannel do
         player_id,
         %{}
       )
+
+      TankGame.add_player("tank_game_#{game_id}", player_id)
+      if player_index == 2 do
+        TankGame.set_game_live(
+          "tank_game_#{game_id}",
+          fn (next_player) -> broadcast!(socket, "turn_time_up", %{turn: next_player}) end
+        )
+      end
     end
 
     players =
@@ -72,14 +80,39 @@ defmodule TanksServerWeb.GameChannel do
 
   def handle_in("fire", %{"rotation" => rotation, "power" => power}, socket) do
     player_id = socket.assigns.player_id
-    game_id = socket.assigns.game_id
 
     broadcast!(socket, "fire", %{id: player_id, rotation: rotation, power: power})
     {:noreply, socket}
   end
 
   def handle_in("explode", %{"player_id" => player_id}, socket) do
+    game_id = socket.assigns.game_id
+    _game_state = TankGame.set_game_over("tank_game_#{game_id}")
     broadcast!(socket, "explode", %{id: player_id})
+    {:noreply, socket}
+  end
+
+  def handle_in("switch_player_turn", _params, socket) do
+    game_id = socket.assigns.game_id
+
+    broadcast_turn_switch =
+      fn (next_player) -> broadcast!(socket, "turn_time_up", %{turn: next_player}) end
+
+    {:ok, game_state} = TankGame.switch_turns("tank_game_#{game_id}", broadcast_turn_switch)
+
+    broadcast_turn_switch.(game_state[:player_turn])
+    {:noreply, socket}
+  end
+
+  def handle_in("restart_game", _params, socket) do
+    game_id = socket.assigns.game_id
+
+    broadcast_turn_switch =
+      fn (next_player) -> broadcast!(socket, "turn_time_up", %{turn: next_player}) end
+
+    {:ok, game_state} = TankGame.set_game_live("tank_game_#{game_id}", broadcast_turn_switch)
+
+    broadcast!(socket, "restart_game", %{})
     {:noreply, socket}
   end
 end
