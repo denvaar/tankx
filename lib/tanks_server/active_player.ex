@@ -47,7 +47,7 @@ defmodule TanksServer.ActivePlayer do
 
   # TODO: Move to another module
   defp get_or_create_player(game_id, player_id) do
-    random_x = Enum.random(20..400)
-    %{id: player_id, game_id: game_id, x: random_x, y: 300} # pick arbitrary numbers for now
+    random_x = Enum.random(20..1000)
+    %{id: player_id, game_id: game_id, x: random_x, y: 300}
   end
 end
